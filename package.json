@@ -1,0 +1,20 @@
+{
+  "name": "plugin-instagram-channel",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "postinstall": "flex-plugin pre-script-check"
+  },
+  "dependencies": {
+    "antd": "^3.26.19",
+    "flex-plugin-scripts": "4.2.2",
+    "react": "16.5.2",
+    "react-dom": "16.5.2",
+    "react-scroll": "^1.8.6",
+    "react-scroll-to-bottom": "^4.2.0"
+  },
+  "devDependencies": {
+    "@twilio/flex-ui": "^1",
+    "react-test-renderer": "16.5.2"
+  }
+}
