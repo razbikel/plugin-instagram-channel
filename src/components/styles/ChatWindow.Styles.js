@@ -60,7 +60,8 @@ export const ResponseTime = styled('p')`
     float: right;
     color:#ffb0f9;
     // flex-direction: row-reverse;
-    margin-left: auto;
+    // margin-left: auto;
+    margin-right: auto;
 `
 
 export const Response = styled('div')`
@@ -86,7 +87,8 @@ export const FooterChat = styled('div')`
     position:absolute;
     bottom:2.5%;
     width:100%;
-    margin-left:10%;
+    // margin-left:10%;
+    margin-right:7%;
 `
 
     export const Icon = styled('i')`
@@ -99,12 +101,15 @@ export const FooterChat = styled('div')`
     export const Send = styled('div')`
         color:#fff;
         background-color: #4f6ebd;
-        margin-left:5%;
+        // margin-left:5%;
+        margin-right:5%;
         padding: 1% 1% 1% 1%;
         border-radius: 50px;
         font-size: 14pt;
         cursor:pointer;
-
+        &:hover{
+            background:#95a8d7;
+        }
     `
 
 export const WriteMessage = styled('input')`

@@ -175,7 +175,7 @@ class Instagram extends React.Component {
                                 {this.get_messages_jsx()}
                         </Chat>
                         <FooterChat>
-                            <WriteMessage type="text" placeholder="Message..." onChange={this.editorOnChange} onSubmit={this.editorOnSubmit} value={this.state.edit} ></WriteMessage>
+                            <WriteMessage type="text" placeholder="הודעה..." onChange={this.editorOnChange} onSubmit={this.editorOnSubmit} value={this.state.edit} ></WriteMessage>
                             <Send aria-hidden="true" onClick={this.editorOnSubmit}>
                                 <SendButton/>
                             </Send>
