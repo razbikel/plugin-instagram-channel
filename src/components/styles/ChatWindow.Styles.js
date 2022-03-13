@@ -46,6 +46,16 @@ export const Chat = styled('div')`
             border-radius: 12px;
         `
 
+        export const IMG = styled('img')`
+            height: 25%;
+            width: 25%;
+            background-color: #f6f6f6;
+            padding:2%;
+            margin: 0 10%;
+            border-radius: 12px;
+            cursor: pointer;
+        `
+
 export const TextOnly = styled('div')`
     margin-left: 45px;
 `

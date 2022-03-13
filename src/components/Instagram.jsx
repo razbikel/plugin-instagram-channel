@@ -2,7 +2,7 @@ import React from "react";
 import axios from "axios";
 import { withTheme, withTaskContext } from '@twilio/flex-ui';
 import {message} from "antd";
-import {Container, Chat, MessagesChat, Message, Photo, Text, TextOnly, Time, ResponseTime, Response, ResponseText, FooterChat, Send, WriteMessage} from '../components/styles/ChatWindow.Styles';
+import {Container, Chat, MessagesChat, Message, Photo, Text, TextOnly, Time, ResponseTime, Response, ResponseText, FooterChat, Send, WriteMessage, IMG} from '../components/styles/ChatWindow.Styles';
 import { Icon } from '@twilio/flex-ui';
 
 
@@ -27,6 +27,11 @@ class Instagram extends React.Component {
 
     scrollToBottom = () => {
         this.state.scroller.scrollIntoView({ behavior: 'smooth' })
+      }
+
+    openInNewTab = (url) => {
+        const newWindow = window.open(url, '_blank', 'noopener,noreferrer')
+        if (newWindow) newWindow.opener = null
       }
 
 
@@ -130,17 +135,18 @@ class Instagram extends React.Component {
                     <MessagesChat key={index}>
                         {from_client ? <Photo src={`${messages_array[0].profile_pic}`}/> : null}
                         {messages_array.map( (message, index) => {
+                            let media_url = message.attachments && message.attachments.data[0].image_data.url ? message.attachments.data[0].image_data.url : undefined;
                             if (from_client){
                                 return(
                                     <Message key={index}>
-                                        <Text>{message.message}</Text>
+                                        {media_url ? <IMG src={media_url} alt={`media-url-${index}`} onClick={() => this.openInNewTab(media_url)}/> : <Text>{message.message}</Text>}
                                     </Message>
                                 )
                             }
                             else{
                                 return(
                                     <Response key={index}>
-                                        <ResponseText>{message.message}</ResponseText>
+                                         {media_url ? <IMG src={media_url} alt={`media-url-${index}`} onClick={() => this.openInNewTab(media_url)}/> : <Text>{message.message}</Text>}
                                     </Response>
                                 )
                             }
