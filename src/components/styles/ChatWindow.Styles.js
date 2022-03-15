@@ -78,7 +78,7 @@ export const Response = styled('div')`
     display:flex;
     flex-direction: row-reverse;
     align-items: center;
-    // margin-bottom: 2%;
+    margin-bottom: 2%;
     float: right;
 `
 
@@ -88,6 +88,17 @@ export const Response = styled('div')`
         padding: 2%;
         border-radius: 12px;
         background-color: #ffb0f9 !important;
+        margin-bottom: 0 !important;
+    `
+
+        export const ResponseIMG = styled('img')`
+        height: 25%;
+        width: 25%;
+        background-color: #ffb0f9 !important;
+        padding:2%;
+        // margin: 0 10%;
+        border-radius: 12px;
+        cursor: pointer;
     `
 
 export const FooterChat = styled('div')`
@@ -98,7 +109,7 @@ export const FooterChat = styled('div')`
     bottom:2.5%;
     width:100%;
     // margin-left:10%;
-    margin-right:7%;
+    margin-right:3%;
 `
 
     export const Icon = styled('i')`
@@ -112,7 +123,21 @@ export const FooterChat = styled('div')`
         color:#fff;
         background-color: #4f6ebd;
         // margin-left:5%;
-        margin-right:5%;
+        margin-right:3%;
+        padding: 1% 1% 1% 1%;
+        border-radius: 50px;
+        font-size: 14pt;
+        cursor:pointer;
+        &:hover{
+            background:#95a8d7;
+        }
+    `
+
+    export const UploadImage = styled('label')`
+        color:#fff;
+        background-color: #4f6ebd;
+        // margin-left:5%;
+        margin-right:3%;
         padding: 1% 1% 1% 1%;
         border-radius: 50px;
         font-size: 14pt;
@@ -123,7 +148,7 @@ export const FooterChat = styled('div')`
     `
 
 export const WriteMessage = styled('input')`
-    width:70%;
+    width:75%;
     height: 4vh;
     padding: 2%;
     border: 2px solid #EEE;

@@ -1,8 +1,9 @@
 import React from "react";
 import axios from "axios";
+import qs from 'qs';
 import { withTheme, withTaskContext } from '@twilio/flex-ui';
 import {message} from "antd";
-import {Container, Chat, MessagesChat, Message, Photo, Text, TextOnly, Time, ResponseTime, Response, ResponseText, FooterChat, Send, WriteMessage, IMG} from '../components/styles/ChatWindow.Styles';
+import {Container, Chat, MessagesChat, Message, Photo, Text, TextOnly, Time, ResponseTime, Response, ResponseText, FooterChat, Send, WriteMessage, IMG, ResponseIMG, UploadImage} from '../components/styles/ChatWindow.Styles';
 import { Icon } from '@twilio/flex-ui';
 
 
@@ -12,6 +13,13 @@ const SendButton = (props) => {
       <Icon icon="SendLarge"/>
     );
   }
+
+const Attachment = (props) => {
+    return (
+      <Icon icon="Attachment"/>
+    );
+  }
+
 
 class Instagram extends React.Component {
 
@@ -146,7 +154,7 @@ class Instagram extends React.Component {
                             else{
                                 return(
                                     <Response key={index}>
-                                         {media_url ? <IMG src={media_url} alt={`media-url-${index}`} onClick={() => this.openInNewTab(media_url)}/> : <Text>{message.message}</Text>}
+                                         {media_url ? <ResponseIMG src={media_url} alt={`media-url-${index}`} onClick={() => this.openInNewTab(media_url)}/> : <ResponseText>{message.message}</ResponseText>}
                                     </Response>
                                 )
                             }
@@ -158,6 +166,70 @@ class Instagram extends React.Component {
             console.log('***jsx_arr', jsx_arr)
             return jsx_arr;
         }
+    }
+
+    getBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+        });
+      }
+
+
+    send_media_message = async (media_url, user_ig_sid) => {
+
+        let data = {
+            // 'Token': this.props.manager.store.getState().flex.session.ssoTokenPayload.token,
+            'media_url': media_url,
+            'sender_instagram_id': user_ig_sid
+        }
+
+        let options = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+            data: qs.stringify(data),
+            url: 'https://instagram-integration-5004-dev.twil.io/send_media_message'
+        };
+
+        const send_res = await axios(options);
+        console.log('***SEND_MEDIA_RES', send_res);
+        await this.fetch_conversation();
+    }
+
+
+    send_file = async (event) => {
+        console.log('***BP2', event.target.files[0])
+        let sender_id = this.props.task.attributes.sender_igsid
+        const file = event.target.files[0];
+        const file_name = file && file.name ? file.name: null;
+        const base_64_file = await this.getBase64(file);
+
+
+        let data = {
+            // 'Token': this.props.manager.store.getState().flex.session.ssoTokenPayload.token,
+            'base64_file': base_64_file,
+            'file_name': file_name
+        }
+
+        let options = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+            data: qs.stringify(data),
+            url: 'https://instagram-integration-5004-dev.twil.io/upload_image'
+        };
+        try{
+            const upload_file_res = await axios(options);
+            console.log('***MEDIA_URL', upload_file_res.data.media_url)
+            await this.send_media_message(upload_file_res.data.media_url, sender_id);
+
+        }
+        catch(error){
+            console.log('***UPLOAD FILE ERROR', error);
+        }
+      
+
     }
 
 
@@ -185,6 +257,11 @@ class Instagram extends React.Component {
                             <Send aria-hidden="true" onClick={this.editorOnSubmit}>
                                 <SendButton/>
                             </Send>
+
+                            <UploadImage for="file-upload" style={{border:"1px solid #ccc", display:"inline-block", padding:"6px 12px", cursor:"pointer"}}>
+                                <Attachment />
+                            </UploadImage>
+                            <input type="file" name="file" onChange={this.send_file} id="file-upload" style={{display:"none"}} />
                         </FooterChat>
                         <div ref={this.messagesEndRef}/>
                     </Container>
