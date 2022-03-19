@@ -13,6 +13,20 @@ exports.handler = async function (context, event, callback) {
 
     const client = context.getTwilioClient();
 
+
+    const create_story_task = async (taskAttributes) => {
+        console.log('creating new story task');
+        await client.taskrouter.workspaces(process.env.FLEX_WORKSPACE_SID).tasks
+        .create({
+            attributes: JSON.stringify(taskAttributes),
+            workflowSid: process.env.WORKFLOW_SID,
+            taskChannel: 'instagram'
+        });
+
+        callback(null, event["hub.challenge"]);
+
+    }
+
     const get_sender_igsid = async (message_id) => {
         const ig_id = await FB.api(`${message_id}?fields=from`)
         return ig_id.from.id
@@ -36,6 +50,42 @@ exports.handler = async function (context, event, callback) {
             const result = await FB.api(`me/take_thread_control`,'post',{"recipient":{"id":`${ig_id}`}});
             console.log('result', result);
         }
+    }
+
+    const delete_message_update = async(deleted_message_id) => {
+        let taskFilter = `channelType == "instagram"`;
+        var promises_tasks = [];
+        let tasks = await client.taskrouter.workspaces(context.FLEX_WORKSPACE_SID)
+        .tasks
+        .list({evaluateTaskAttributes: taskFilter, limit:100})
+        if(tasks){
+            tasks.forEach( async task => {
+                if(task.assignmentStatus === 'assigned'){
+                    let taskAttributes = { ... JSON.parse(task.attributes) };
+                    console.log('taskAttributes',taskAttributes);
+                    let taskSid = task.sid;
+                    taskAttributes["published"] = true;
+                    taskAttributes["deleted_message"] = deleted_message_id;
+                    try{
+                        promises_tasks.push(client.taskrouter.workspaces(context.FLEX_WORKSPACE_SID)
+                        .tasks(taskSid)
+                        .update({
+                                // assignmentStatus: 'Assigned',
+                                //  reason:'new message',
+                                 attributes: JSON.stringify(taskAttributes)
+                        }))
+                    }
+                    catch(error){
+                        console.log('error');
+                    }
+                }
+            })
+        }
+        if (promises_tasks && promises_tasks.length > 0){
+            // update task attribute if there is the need
+            await Promise.all(promises_tasks).then(res => console.log('delete message promise array res', res));
+        }
+        callback(null, event["hub.challenge"])
     }
 
     const find_instagram_sender_task = async (ig_id,thread_id) => {
@@ -137,17 +187,23 @@ exports.handler = async function (context, event, callback) {
             else{
                 // message sent by client
                 let instagram_objects = [];
+                var is_deleted = false;
                 if (event.object === "instagram") {
                     event.entry.forEach(e => {
                         let id = e["id"];
                         if (e.hasOwnProperty('messaging')){
                             e.messaging.forEach(m => {
                                 console.log('message', m);
+                                if( m.message.is_deleted){
+                                    is_deleted = true;
+                                }
+                                console.log('message content', m.message.attachments);
                                 let sender_id = m.sender.id;
                                 let recipient_id = m.recipient.id;
                                 let message = m.message;
                                 let message_id = m.message.mid;
-                                instagram_objects.push({id, sender_id, recipient_id, message, message_id})
+                                let attachments = m.message.attachments;
+                                instagram_objects.push({id, sender_id, recipient_id, message, message_id, attachments})
                             })
                         }
                         if (e.hasOwnProperty('changes')){
@@ -158,53 +214,71 @@ exports.handler = async function (context, event, callback) {
                     })
                 }
     
-                const ig_id = await get_sender_igsid(instagram_objects[0].message_id);
-                console.log('ig_id', ig_id);
-    
-                const thread_id = await get_conversation_id(ig_id)
-                console.log('thread_id', thread_id);
-    
-                const is_instagram_sender_task = await find_instagram_sender_task(ig_id,thread_id)
-                console.log('is_instagram_sender_task', is_instagram_sender_task);
-    
-                // if dont need to create new task
-                if(!is_instagram_sender_task){
-                    // callback(null, event["hub.challenge"])
-                    callback(null, "")
+                if(is_deleted){
+                    await delete_message_update(instagram_objects[0].message_id);
                 }
-    
-                else {
-                    await take_thread_control(ig_id);
-                    const participants = await FB.api(`${thread_id}?fields=participants`) 
-                    console.log(participants);
-                    const participant1 = participants.participants.data[0] // { username: 'amantwilio', id: '17841452245932387' }
-                    const participant2 = participants.participants.data[1]
-    
-                    console.log('participant1', participant1)
-                    console.log('participant2', participant2)
-    
+
+                else{
+                    // not delete message webhook
+                    const ig_id = await get_sender_igsid(instagram_objects[0].message_id);
+                    console.log('ig_id', ig_id);
         
-                    const taskAttributes = {
-                        conversationsId: thread_id,
-                        name: participant2.username,
-                        channelType: 'instagram',
-                        published: false,
-                        sender_instagram_id: participant2.id,
-                        sender_igsid: ig_id
+                    const thread_id = await get_conversation_id(ig_id)
+                    console.log('thread_id', thread_id);
+        
+                    const is_instagram_sender_task = await find_instagram_sender_task(ig_id,thread_id)
+                    console.log('is_instagram_sender_task', is_instagram_sender_task);
     
+                    
+                    // if dont need to create new task
+                    if(!is_instagram_sender_task){
+                        // callback(null, event["hub.challenge"])
+                        callback(null, "")
                     }
+        
+                    else {
+                        await take_thread_control(ig_id);
+                        const participants = await FB.api(`${thread_id}?fields=participants`) 
+                        console.log(participants);
+                        const participant1 = participants.participants.data[0] // { username: 'amantwilio', id: '17841452245932387' }
+                        const participant2 = participants.participants.data[1]
+        
+                        console.log('participant1', participant1)
+                        console.log('participant2', participant2)    
+            
+                        const taskAttributes = {
+                            conversationsId: thread_id,
+                            name: participant2.username,
+                            channelType: 'instagram',
+                            published: false,
+                            sender_instagram_id: participant2.id,
+                            sender_igsid: ig_id
+                        }
     
-                    console.log('creating new task');
-                    await client.taskrouter.workspaces(process.env.FLEX_WORKSPACE_SID).tasks
-                    .create({
-                        attributes: JSON.stringify(taskAttributes),
-                        workflowSid: process.env.WORKFLOW_SID,
-                        taskChannel: 'instagram'
-                    });
     
-                    callback(null, event["hub.challenge"]);
-    
+                        // story task
+                        if(instagram_objects[0].attachments && instagram_objects[0].attachments[0].type === 'story_mention'){
+                            taskAttributes["story_media"] = instagram_objects[0].attachments[0].payload.url;
+                            taskAttributes["is_story"] = true;
+                            await create_story_task(taskAttributes);
+                        }
+                        else{
+                            //message task
+                            console.log('creating new task');
+                            await client.taskrouter.workspaces(process.env.FLEX_WORKSPACE_SID).tasks
+                            .create({
+                                attributes: JSON.stringify(taskAttributes),
+                                workflowSid: process.env.WORKFLOW_SID,
+                                taskChannel: 'instagram'
+                            });
+            
+                            callback(null, event["hub.challenge"]);
+                        }
+        
+                    }
+
                 }
+
             }    
         }
         catch(error){

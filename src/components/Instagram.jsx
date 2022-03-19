@@ -26,7 +26,13 @@ class Instagram extends React.Component {
     constructor() {
         super();
         // published = true means that message has been sent but not yet rendered to the screen
-        this.state = {conversation: undefined, edit: "", published: false, messages_array_arrays: undefined, scroller:undefined};
+        this.state = {
+            conversation: undefined,
+            edit: "",
+            published: false,
+            messages_array_arrays: undefined,
+            scroller:undefined,
+        };
     }
 
 
@@ -64,10 +70,12 @@ class Instagram extends React.Component {
     async componentDidMount() {
         console.log('***componentDidMount')
         console.log('***task', this.props.task);
-        await this.fetch_conversation();
-        const div = this.messagesEndRef.current;
-        this.setState({ scroller: div })
-        this.scrollToBottom()
+        if(!this.props.task.attributes.is_story){
+            await this.fetch_conversation();
+            const div = this.messagesEndRef.current;
+            this.setState({ scroller: div })
+            this.scrollToBottom()
+        }
     }
 
 
@@ -240,35 +248,59 @@ class Instagram extends React.Component {
              }
          }
 
-        if (!this.state.conversation){
-            return(
-                <div>loading...</div>
-            )
-        }
-        else {
-            return(
-                <div style={{width:"100%"}}>
-                    <Container id='instagram-chat-container'  >
-                        <Chat>
-                                {this.get_messages_jsx()}
-                        </Chat>
-                        <FooterChat>
-                            <WriteMessage type="text" placeholder="הודעה..." onChange={this.editorOnChange} onSubmit={this.editorOnSubmit} value={this.state.edit} ></WriteMessage>
-                            <Send aria-hidden="true" onClick={this.editorOnSubmit}>
-                                <SendButton/>
-                            </Send>
+         console.log('***IS_STORY', this.props.task.attributes.is_story)
 
-                            <UploadImage for="file-upload" style={{border:"1px solid #ccc", display:"inline-block", padding:"6px 12px", cursor:"pointer"}}>
-                                <Attachment />
-                            </UploadImage>
-                            <input type="file" name="file" onChange={this.send_file} id="file-upload" style={{display:"none"}} />
-                        </FooterChat>
-                        <div ref={this.messagesEndRef}/>
-                    </Container>
+        //  story task
+         if (this.props.task.attributes.is_story){
+             return(
+                <div>
+                    <h1 style={{marginTop:"5%"}}>
+                        <u><b>{`${this.props.task.attributes.name} `}</b></u> mentioned you in their story:
+                    </h1>
+                    <div>
+                        <img
+                            alt="story"
+                            src={`${this.props.task.attributes.story_media}`}
+                            style={{width:"100%", height:"70vh", marginTop:"5%", cursor:"pointer"}}
+                            onClick={() => this.openInNewTab(this.props.task.attributes.story_media)}
+                        />
+                    </div>
                 </div>
-      
-            )
-        }
+             )
+         }
+         else{
+            // message task
+            if (!this.state.conversation){
+                return(
+                    <div>loading...</div>
+                )
+            }
+            else {
+                return(
+                    <div style={{width:"100%"}}>
+                        <Container id='instagram-chat-container'  >
+                            <Chat>
+                                    {this.get_messages_jsx()}
+                            </Chat>
+                            <FooterChat>
+                                <WriteMessage type="text" placeholder="הודעה..." onChange={this.editorOnChange} onSubmit={this.editorOnSubmit} value={this.state.edit} ></WriteMessage>
+                                <Send aria-hidden="true" onClick={this.editorOnSubmit}>
+                                    <SendButton/>
+                                </Send>
+
+                                <UploadImage for="file-upload" style={{border:"1px solid #ccc", display:"inline-block", padding:"6px 12px", cursor:"pointer"}}>
+                                    <Attachment />
+                                </UploadImage>
+                                <input type="file" name="file" onChange={this.send_file} id="file-upload" style={{display:"none"}} />
+                            </FooterChat>
+                            <div ref={this.messagesEndRef}/>
+                        </Container>
+                    </div>
+        
+                )
+            }
+         }
+
     }
 }
 

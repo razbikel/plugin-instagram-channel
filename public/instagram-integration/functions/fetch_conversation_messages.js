@@ -51,7 +51,7 @@ exports.handler = async function (context, event, callback) {
 
         let messages = [];
         messageList.messages.data.forEach( message => {
-            messages.push(FB.api(`${message.id}?fields=message,from{username,id},created_time`))
+            messages.push(FB.api(`${message.id}?fields=id,message,from{username,id},created_time,attachments`))
         } )
 
         messages = await Promise.all(messages);
