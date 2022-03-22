@@ -151,11 +151,18 @@ class Instagram extends React.Component {
                     <MessagesChat key={index}>
                         {from_client ? <Photo src={`${messages_array[0].profile_pic}`}/> : null}
                         {messages_array.map( (message, index) => {
+                            console.log('***MESSAGE', message);
                             let media_url = message.attachments && message.attachments.data[0].image_data.url ? message.attachments.data[0].image_data.url : undefined;
                             if (from_client){
+                                const is_story = message.hasOwnProperty('story');
+                                const story_expired = message.hasOwnProperty('story') && message.story.mention.link === "";
                                 return(
                                     <Message key={index}>
-                                        {media_url ? <IMG src={media_url} alt={`media-url-${index}`} onClick={() => this.openInNewTab(media_url)}/> : <Text>{message.message}</Text>}
+                                        {
+                                            is_story && story_expired ? <Text>Mentioned you in their story. (data expired)</Text> : 
+                                            is_story ? <IMG src={message.story.mention.link} onClick={() => this.openInNewTab(message.story.mention.link)}></IMG> : 
+                                            media_url ? <IMG src={media_url} alt={`media-url-${index}`} onClick={() => this.openInNewTab(media_url)}/> : <Text>{message.message}</Text>
+                                        }
                                     </Message>
                                 )
                             }

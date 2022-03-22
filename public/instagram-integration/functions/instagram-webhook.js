@@ -164,7 +164,8 @@ exports.handler = async function (context, event, callback) {
             event.entry[0].messaging[0].sender.id === process.env.INSTAGRAM_USER_ID ||
             event.entry[0].id === process.env.INSTAGRAM_USER_ID 
         ){
-            return true;
+            // return true;
+            return false;
         }
         else{
             return false;
